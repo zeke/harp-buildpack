@@ -28,12 +28,13 @@ PATH=$PATH:$build_dir/vendor/node/bin
 # Run subsequent node/npm commands from the build path
 cd $build_dir
 
-# Copy node modules to the slug
+# Copy the node app to the slug
 cp -r $bp_dir/node_modules $build_dir/
+cp -r $bp_dir/server.js $build_dir/
 
 # Create a Procfile
 status "Creating a harp server Procfile"
-echo "web: ./node_modules/harp/bin/harp server $build_dir -p $(echo $PORT)" > $build_dir/Procfile
+echo "web: npm start" > $build_dir/Procfile
 
 # Update the PATH
 status "Building runtime environment"
