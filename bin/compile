@@ -33,7 +33,7 @@ cp -r $bp_dir/node_modules $build_dir/
 
 # Create a Procfile
 status "Creating a harp server Procfile"
-echo "web: ./node_modules/harp/bin/harp server $build_dir -p $PORT" > $build_dir/Procfile
+echo "web: ./node_modules/harp/bin/harp server $build_dir -p $(echo $PORT)" > $build_dir/Procfile
 
 # Update the PATH
 status "Building runtime environment"
