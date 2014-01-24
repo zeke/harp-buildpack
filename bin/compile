@@ -39,4 +39,4 @@ echo "web: node server.js" > $build_dir/Procfile
 # Update the PATH
 status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
-echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";" > $build_dir/.profile.d/nodejs.sh
+echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";export NODE_ENV=${NODE_ENV:production}" > $build_dir/.profile.d/nodejs.sh
