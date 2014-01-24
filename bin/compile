@@ -34,7 +34,7 @@ cp -r $bp_dir/server.js $build_dir/
 
 # Create a Procfile
 status "Creating a harp server Procfile"
-echo "web: npm start" > $build_dir/Procfile
+echo "web: node server.js" > $build_dir/Procfile
 
 # Update the PATH
 status "Building runtime environment"
