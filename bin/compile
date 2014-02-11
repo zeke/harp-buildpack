@@ -33,7 +33,7 @@ cd $build_dir
 # Create a node_modules directory if one doesn't already exist
 mkdir -p $build_dir/node_modules
 
-if [ -d "$build_dir/package.json" ]; then
+if [ -f "$build_dir/package.json" ]; then
   # Found package.json; installing any npm dependencies
   status "Installing npm dependencies"
   npm install --production 2>&1 | indent
