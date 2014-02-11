@@ -9,13 +9,15 @@ build_dir=$1
 cache_dir=$2
 env_dir=$3
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
-node_version="0.10.25"
 
 # Load some convenience functions like status(), echo(), and indent()
 source $bp_dir/bin/common.sh
 
+# Fetch the latest stable node version from semver.io
+node_version=$(curl --silent --get https://semver.io/node/stable)
+
 # Download node from Heroku's S3 mirror of nodejs.org/dist
-status "Downloading and installing node"
+status "Downloading and installing node $node_version"
 node_url="http://s3pository.heroku.com/node/v$node_version/node-v$node_version-linux-x64.tar.gz"
 curl $node_url -s -o - | tar xzf - -C $build_dir
 
