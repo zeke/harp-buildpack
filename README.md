@@ -4,7 +4,7 @@ This is a [buildpack](https://devcenter.heroku.com/articles/buildpacks) for depl
 
 ## Requirements
 
-You'll need an `index.jade` or `index.html` file in the root directory of your app.
+You'll need a `harp.json`, `index.ejs`, `index.jade`, `index.html`, or `index.md` file in the root directory of your app.
 
 ## Demo
 
