@@ -30,14 +30,23 @@ PATH=$PATH:$build_dir/vendor/node/bin
 # Run subsequent node/npm commands from the build path
 cd $build_dir
 
-# Copy harp dependencies to the slug
-cp -r $bp_dir/node_modules $build_dir/
+# Create a node_modules directory if one doesn't already exist
+mkdir -p $build_dir/node_modules
+
+if [ -d "$build_dir/package.json" ]; then
+  # Found package.json; installing any npm dependencies
+  status "Installing npm dependencies"
+  npm install --production 2>&1 | indent
+fi
+
+# Copy harp dependency to node_modules
+cp -r $bp_dir/node_modules/harp $build_dir/node_modules/
 
 # Create a Procfile
 status "Creating a harp server Procfile"
 echo "web: ./node_modules/harp/bin/harp server . -p \$PORT" > $build_dir/Procfile
 
 # Update the PATH
-status "Building runtime environment"
+# status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
 echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";export NODE_ENV=${NODE_ENV:production}" > $build_dir/.profile.d/nodejs.sh
