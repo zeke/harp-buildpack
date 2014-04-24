@@ -2,6 +2,7 @@
 # bin/detect <build-dir>
 
 # Make config vars available to the build
+bp_dir=$(cd $(dirname $0); cd ..; pwd)
 source $bp_dir/bin/common.sh
 if [ -d "$env_dir" ]; then
   export_env_dir $env_dir
