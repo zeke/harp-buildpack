@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 # bin/detect <build-dir>
 
-if [ -f $1/harp.json ] || [ -f $1/index.ejs ] || [ -f $1/index.jade ] || [ -f $1/index.md ] || [ -f $1/index.html ]; then
+# Make config vars available to the build
+source $bp_dir/bin/common.sh
+if [ -d "$env_dir" ]; then
+  export_env_dir $env_dir
+fi
+
+if [ $HARP_ROOT ] || [ -f $1/harp.json ] || [ -f $1/index.ejs ] || [ -f $1/index.jade ] || [ -f $1/index.md ] || [ -f $1/index.html ]; then
   echo "Harp" && exit 0
 else
   echo "no" && exit 1
