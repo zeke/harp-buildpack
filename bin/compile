@@ -13,6 +13,12 @@ bp_dir=$(cd $(dirname $0); cd ..; pwd)
 # Load some convenience functions like status(), echo(), and indent()
 source $bp_dir/bin/common.sh
 
+# Make config vars available to the build
+if [ -d "$env_dir" ]; then
+  status "Exporting config vars to environment"
+  export_env_dir $env_dir
+fi
+
 # Fetch the latest stable node version from semver.io
 node_version=$(curl --silent --get https://semver.io/node/stable)
 
@@ -44,7 +50,7 @@ cp -r $bp_dir/node_modules/harp $build_dir/node_modules/
 
 # Create a Procfile
 status "Creating a harp server Procfile"
-echo "web: ./node_modules/harp/bin/harp server . -p \$PORT" > $build_dir/Procfile
+echo "web: ./node_modules/harp/bin/harp server ${HARP_ROOT:-.} -p \$PORT" > $build_dir/Procfile
 
 # Update the PATH
 # status "Building runtime environment"
