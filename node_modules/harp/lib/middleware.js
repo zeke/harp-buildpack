@@ -1,8 +1,8 @@
-var path    = require("path")
-var fs      = require("fs")
-var helpers         = require("./helpers")
-var mime            = require("mime")
-var polymer         = require('terraform')
+var path            = require('path')
+var fs              = require('fs')
+var helpers         = require('./helpers')
+var mime            = require('mime')
+var terraform       = require('terraform')
 var pkg             = require('../package.json')
 var skin            = require('./skin')
 var connect         = require('connect')
@@ -40,82 +40,84 @@ exports.notMultihostURL = function(req, rsp, next){
   }
 }
 
+var reservedDomains = ["harp.io", "harpdev.io", "harpapp.io"];
 exports.index = function(dirPath){
   return function(req, rsp, next){
-    var host      = req.headers.host
-    var hostname  = host.split(':')[0]
-    var arr       = hostname.split(".")
-    var port      = host.split(':')[1] ? ':' + host.split(':')[1] : ''
+    var host      = req.headers.host;
+    var hostname  = host.split(':')[0];
+    var arr       = hostname.split(".");
+    var port      = host.split(':')[1] ? ':' + host.split(':')[1] : '';
+    var poly      = terraform.root(__dirname + "/templates");
 
     if(arr.length == 2){
       fs.readdir(dirPath, function(err, files){
-        var projects = []
+        var projects = [];
 
         files.forEach(function(file){
-          if(file.split(".").length == 3){
+          var local = file.split('.');
 
-            var portal = file.split('.')
-            portal.shift()
+          var appPart = local.join("_");
 
-            var local = file.split('.')
-            local.pop()
-            local.pop()
-            local.push(host)
+          if (local.length > 2) {
+            var domain = local.slice(Math.max(local.length - 2, 1)).join(".");
+            if (reservedDomains.indexOf(domain) != -1) {
+              appPart =  local[0];
+            }
+          }
 
+          // DOT files are ignored.
+          if (file[0] !== ".") {
             projects.push({
               "name"      : file,
-              "localUrl"  : 'http://' + local.join('.'),
-              "remoteUrl" : 'http://' + file,
-              "portalUrl" : 'http://' + portal.join('.') + '/apps/' + file,
+              "localUrl"  : 'http://' + appPart + "." + host,
               "localPath" : path.resolve(dirPath, file)
-            })
+            });
           }
-        })
-        var poly = polymer.root(__dirname + "/templates")
+        });
+        
         poly.render("index.jade", { pkg: pkg, projects: projects, layout: "_layout.jade" }, function(error, body){
           rsp.end(body)
-        })
-
+        });
       })
-    }else{
-      next()
+    } else {
+      next();
     }
-
   }
 }
 
 exports.hostProjectFinder = function(dirPath){
   return function(req, rsp, next){
-    var host        = req.headers.host
-    var hostname    = host.split(':')[0]
-    var matches     = []
+    var host        = req.headers.host;
+    var hostname    = host.split(':')[0];
+    var matches     = [];
 
     fs.readdir(dirPath, function(err, files){
-
-      [".io", ".me"].forEach(function(ext){
-        var val = hostname.replace(/\.\w+$/, ext)
-        if(files.indexOf(val) !== -1){
-          matches.push(val)
+      var appPart = hostname.split(".")[0];
+      files.forEach(function(file){
+        var fp = file.split('.');
+        var filePart;
+        // Check against Reserved Domains first.
+        if (fp.length > 2) {
+          var domain = fp.slice(Math.max(fp.length - 2, 1)).join(".");
+          if (reservedDomains.indexOf(domain) != -1) {
+            fp = fp.slice(0, Math.max(fp.length - 2))
+          }
         }
-      })
 
-      ;[".harpapp.io"].forEach(function(ext){
-        var val = hostname.replace(/\.\w+\.\w+$/, ext)
-        if(files.indexOf(val) !== -1){
-          matches.push(val)
+        filePart = fp.join("_");
+        if (appPart == filePart) {
+          matches.push(file);
         }
-      })
+      });
 
       if(matches.length > 0){
-        req.projectPath = path.resolve(dirPath, matches[0])
-        next()
-      }else{
-        // TODO: add better error message here
+        req.projectPath = path.resolve(dirPath, matches[0]);
+        next();
+      } else {
         rsp.end("Cannot find project")
       }
 
-    })
-
+    });
   }
 }
 
@@ -125,7 +127,6 @@ exports.regProjectFinder = function(projectPath){
     next()
   }
 }
-
 
 /**
  * Fallbacks
@@ -185,8 +186,8 @@ var custom200static = function(req, rsp, next){
 
 var custom200dynamic = function(req, rsp, next){
   skin(req, rsp, [poly], function(){
-    var priorityList  = polymer.helpers.buildPriorityList("200.html")
-    var sourceFile    = polymer.helpers.findFirstFile(req.setup.publicPath, priorityList)
+    var priorityList  = terraform.helpers.buildPriorityList("200.html")
+    var sourceFile    = terraform.helpers.findFirstFile(req.setup.publicPath, priorityList)
     if(!sourceFile) return next()
 
     req.poly.render(sourceFile, function(error, body){
@@ -245,8 +246,8 @@ var custom404static = function(req, rsp, next){
 
 var custom404dynamic = function(req, rsp, next){
   skin(req, rsp, [poly], function(){
-    var priorityList  = polymer.helpers.buildPriorityList("404.html")
-    var sourceFile    = polymer.helpers.findFirstFile(req.setup.publicPath, priorityList)
+    var priorityList  = terraform.helpers.buildPriorityList("404.html")
+    var sourceFile    = terraform.helpers.findFirstFile(req.setup.publicPath, priorityList)
     if(!sourceFile) return next()
 
     req.poly.render(sourceFile, function(error, body){
@@ -281,7 +282,7 @@ var default404 = function(req, rsp, next){
     name: "Page Not Found",
     pkg: pkg
   }
-  polymer.root(__dirname + "/templates").render("404.jade", locals, function(err, body){
+  terraform.root(__dirname + "/templates").render("404.jade", locals, function(err, body){
     var type    = helpers.mimeType("html")
     var charset = mime.charsets.lookup(type)
     rsp.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''));
@@ -299,7 +300,7 @@ var default404 = function(req, rsp, next){
  *
  */
 exports.underscore = function(req, rsp, next){
-  if(polymer.helpers.shouldIgnore(req.url)){
+  if(terraform.helpers.shouldIgnore(req.url)){
     notFound(req, rsp, next)
   }else{
     next()
@@ -315,7 +316,7 @@ exports.underscore = function(req, rsp, next){
 exports.mwl = function(req, rsp, next){
   var ext = path.extname(req.url).replace(/^\./, '')
 
-  if(polymer.helpers.processors["html"].indexOf(ext) !== -1 || polymer.helpers.processors["css"].indexOf(ext) !== -1 || polymer.helpers.processors["js"].indexOf(ext) !== -1){
+  if(terraform.helpers.processors["html"].indexOf(ext) !== -1 || terraform.helpers.processors["css"].indexOf(ext) !== -1 || terraform.helpers.processors["js"].indexOf(ext) !== -1){
     notFound(req, rsp, next)
   }else{
     next()
@@ -378,7 +379,7 @@ exports.static = function(req, res, next) {
  */
 
 exports.setup = function(req, rsp, next){
-  if(req.hasOwnProperty('setup')) next()
+  if(req.hasOwnProperty('setup')) return next()
 
   try{
     req.setup = helpers.setup(req.projectPath)
@@ -391,7 +392,7 @@ exports.setup = function(req, rsp, next){
       pkg: pkg
     }
 
-    return polymer.root(__dirname + "/templates").render("error.jade", locals, function(err, body){
+    return terraform.root(__dirname + "/templates").render("error.jade", locals, function(err, body){
       rsp.statusCode = 500
       rsp.end(body)
     })
@@ -436,7 +437,7 @@ var poly = exports.poly = function(req, rsp, next){
   if(req.hasOwnProperty("poly")) return next()
 
   try{
-    req.poly = polymer.root(req.setup.publicPath, req.setup.config.globals)
+    req.poly = terraform.root(req.setup.publicPath, req.setup.config.globals)
   }catch(error){
     error.stack = helpers.stacktrace(error.stack, { lineno: error.lineno })
     var locals = {
@@ -444,7 +445,7 @@ var poly = exports.poly = function(req, rsp, next){
       error: error,
       pkg: pkg
     }
-    return polymer.root(__dirname + "/templates").render("error.jade", locals, function(err, body){
+    return terraform.root(__dirname + "/templates").render("error.jade", locals, function(err, body){
       rsp.statusCode = 500
       rsp.end(body)
     })
@@ -459,8 +460,8 @@ var poly = exports.poly = function(req, rsp, next){
 
 exports.process = function(req, rsp, next){
   var normalizedPath  = helpers.normalizeUrl(req.url)
-  var priorityList    = polymer.helpers.buildPriorityList(normalizedPath)
-  var sourceFile      = polymer.helpers.findFirstFile(req.setup.publicPath, priorityList)
+  var priorityList    = terraform.helpers.buildPriorityList(normalizedPath)
+  var sourceFile      = terraform.helpers.findFirstFile(req.setup.publicPath, priorityList)
 
   /**
    * We GTFO if we don't have a source file.
@@ -470,7 +471,7 @@ exports.process = function(req, rsp, next){
 
 
   /**
-   * Now we let Polymer handle the asset pipeline.
+   * Now we let terraform handle the asset pipeline.
    */
 
   req.poly.render(sourceFile, function(error, body){
@@ -482,8 +483,8 @@ exports.process = function(req, rsp, next){
         error: error,
         pkg: pkg
       }
-      if(polymer.helpers.outputType(sourceFile) == 'css'){
-        var outputType = polymer.helpers.outputType(sourceFile)
+      if(terraform.helpers.outputType(sourceFile) == 'css'){
+        var outputType = terraform.helpers.outputType(sourceFile)
         var mimeType   = helpers.mimeType(outputType)
         var charset    = mime.charsets.lookup(mimeType)
         var body       = helpers.cssError(locals)
@@ -500,7 +501,7 @@ exports.process = function(req, rsp, next){
         // var loc = loc.join(path.sep) + path.sep
         // if(error.filename) error.filename = error.filename.replace(loc, "")
 
-        polymer.root(__dirname + "/templates").render("error.jade", locals, function(err, body){
+        terraform.root(__dirname + "/templates").render("error.jade", locals, function(err, body){
           var mimeType   = helpers.mimeType('html')
           var charset    = mime.charsets.lookup(mimeType)
           rsp.statusCode = 500
@@ -513,7 +514,7 @@ exports.process = function(req, rsp, next){
       // 404
       if(!body) return next()
 
-      var outputType = polymer.helpers.outputType(sourceFile)
+      var outputType = terraform.helpers.outputType(sourceFile)
       var mimeType   = helpers.mimeType(outputType)
       var charset    = mime.charsets.lookup(mimeType)
       rsp.statusCode = 200
