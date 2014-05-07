@@ -1,9 +1,21 @@
 #!/usr/bin/env bash
 # bin/detect <build-dir>
 
+set -e            # fail fast
+set -o pipefail   # don't ignore exit codes when piping output
+# set -x          # enable debugging
+
+# Configuration
+build_dir=$1
+cache_dir=$2
+env_dir=$3
+bp_dir=$(cd $(dirname $0); cd ..; pwd)
+
+# Load some convenience functions like status(), echo(), and indent()
+source $bp_dir/bin/common.sh
+
 # Make config vars available to the build
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
-source $bp_dir/bin/common.sh
 if [ -d "$env_dir" ]; then
   export_env_dir $env_dir
 fi
