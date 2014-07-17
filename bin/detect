@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
 # bin/detect <build-dir>
 
-echo "Harp"
+if [ -f $1/harp.json ]; then
+  echo "Harp" && exit 0
+else
+  echo "no" && exit 1
+fi
