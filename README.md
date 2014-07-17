@@ -9,8 +9,7 @@ JavaScript files too.
 
 ## Requirements
 
-You'll need an `index.html`, `index.ejs`, `index.jade`, `index.md`, or
-`harp.json` file in the root directory of your app.
+You'll need a `harp.json` file in the root directory of your app.
 
 ## Customizing
 
