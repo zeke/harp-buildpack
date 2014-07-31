@@ -7,12 +7,22 @@ Sass, LESS and Stylus to HTML, CSS & JavaScript. You don't have to use
 preprocessors though: this buildpack works with with regular old HTML, CSS, and
 JavaScript files too.
 
-## Requirements
+## Usage
 
-You'll need an `index.html`, `index.ejs`, `index.jade`, `index.md`, or
-`harp.json` file in the root directory of your app.
+```sh
+mkdir my-harp-app
+cd my-harp-app
+echo "hello world" > index.html
+git init
+git add .
+git commit -am "hello world"
+heroku create my-harp-app
+heroku config:set BUILDPACK_URL=https://github.com/zeke/harp-buildpack
+git push heroku master
+heroku open
+```
 
-## Customizing
+## Custom Root Directory
 
 If your directory structure doesn't play nicely with [harp's
 defaults](http://harpjs.com/docs/environment/init), you can configure the path
@@ -26,20 +36,6 @@ heroku config:set HARP_ROOT=./doc -a my-harp-app
 
 Check out the sample app at [harp-sample.herokuapp.com](https://harp-sample.herokuapp.com/) and its source at [github.com/zeke/harp-sample](https://github.com/zeke/harp-sample).
 
-## Usage
-
-```sh
-mkdir my-harp-app
-cd my-harp-app
-echo "hello world" > index.html
-git init
-git add .
-git commit -am "hello world"
-heroku create my-harp-app
-heroku config:set BUILDPACK_URL=https://github.com/zeke/harp-buildpack.git
-git push heroku master
-heroku open
-```
 
 ## License
 
