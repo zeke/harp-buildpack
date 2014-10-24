@@ -1,4 +1,4 @@
-var marked = require("marked").setOptions({ langPrefix: 'language-' })
+var marked = require("marked").setOptions({ langPrefix: 'language-', headerPrefix: '' })
 var TerraformError = require("../../error").TerraformError
 
 module.exports = function(fileContents, options){
@@ -6,7 +6,7 @@ module.exports = function(fileContents, options){
   return {
     compile: function(){
       return function (locals){
-        return marked(fileContents.toString())
+        return marked(fileContents.toString().replace(/^\uFEFF/, ''))
       }
     },
 
