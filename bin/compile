@@ -20,7 +20,15 @@ if [ -d "$env_dir" ]; then
 fi
 
 # Fetch the latest stable node version from semver.io
-node_version=$(curl --silent --get https://semver.io/node/stable)
+
+# Fetch the node version from package.json
+node_version=$(read_json "$build_dir/package.json" ".engines.node")
+
+# Resolve non-specific node versions using semver.io
+if ! [[ "$node_engine" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  status "Resolving node version ${node_version:-(latest stable)} via semver.io..."
+  node_version=$(curl --silent --get --data-urlencode "range=${node_version}" https://semver.io/node/resolve)
+fi
 
 # Download node from Heroku's S3 mirror of nodejs.org/dist
 status "Downloading and installing node $node_version"
