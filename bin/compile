@@ -43,10 +43,9 @@ if [ -f "$build_dir/package.json" ]; then
   # Found package.json; installing any npm dependencies
   status "Installing npm dependencies"
   npm install --production 2>&1 | indent
+else
+  npm install harp
 fi
-
-# Copy harp dependency to node_modules
-cp -r $bp_dir/node_modules/harp $build_dir/node_modules/
 
 # Create a Procfile
 status "Creating a harp server Procfile"
