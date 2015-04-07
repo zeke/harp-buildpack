@@ -38,3 +38,13 @@ export_env_dir() {
     done
   fi
 }
+
+read_json() {
+  local file=$1
+  local node=$2
+  if test -f $file; then
+    cat $file | $bp_dir/vendor/jq --raw-output "$node // \"\"" || return 1
+  else
+    echo ""
+  fi
+}

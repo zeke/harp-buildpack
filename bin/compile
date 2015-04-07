@@ -20,7 +20,16 @@ if [ -d "$env_dir" ]; then
 fi
 
 # Fetch the latest stable node version from semver.io
-node_version=$(curl --silent --get https://semver.io/node/stable)
+
+# Fetch the node version from package.json
+node_version=$(read_json "$build_dir/package.json" ".engines.node")
+npm_version=$(read_json "$build_dir/package.json" ".engines.npm")
+
+# Resolve non-specific node versions using semver.io
+if ! [[ "$node_engine" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  status "Resolving node version ${node_version:-(latest stable)} via semver.io..."
+  node_version=$(curl --silent --get --data-urlencode "range=${node_version}" https://semver.io/node/resolve)
+fi
 
 # Download node from Heroku's S3 mirror of nodejs.org/dist
 status "Downloading and installing node $node_version"
@@ -32,6 +41,22 @@ mkdir -p $build_dir/vendor
 mv $build_dir/node-v$node_version-linux-x64 $build_dir/vendor/node
 chmod +x $build_dir/vendor/node/bin/*
 PATH=$PATH:$build_dir/vendor/node/bin
+
+# Optionally bootstrap a different npm version
+if [ "$npm_version" != "" ]; then
+  if ! [[ "$npm_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+   status "Resolving npm version ${npm_version} via semver.io..."
+   npm_version=$(curl --silent --get --data-urlencode "range=${npm_version}" https://semver.herokuapp.com/npm/resolve)
+  fi
+  if [[ `npm --version` == "$npm_version" ]]; then
+    status "npm `npm --version` already installed with node"
+  else
+    status "Downloading and installing npm $npm_version (replacing version `npm --version`)..."
+    npm install --unsafe-perm --quiet -g npm@$npm_version 2>&1 >/dev/null | indent
+  fi
+else
+  status "Using default npm version: `npm --version`"
+fi
 
 # Run subsequent node/npm commands from the build path
 cd $build_dir
